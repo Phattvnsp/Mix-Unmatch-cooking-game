@@ -1,4 +1,4 @@
-RECIPES = {
+FOOD_RECIPES = {
     frozenset(["Rice", "Tobiko"]): "Tobiko Sushi",
     frozenset(["Rice", "Fish",]): "Salmon Sushi",
     frozenset(["Rice", "Seaweed", "Tobiko"]): "Tobiko Roll",
@@ -17,3 +17,16 @@ RECIPES = {
     frozenset(["Fish", "Potato"]): "Fish and Chips",
 }    
 
+DRINK_RECIPES = {
+    frozenset(["Water", "Coffee"]): "Americano",
+    frozenset(["Milk", "Coffee"]): "Caffe Latte",
+    frozenset(["Milk", "Matcha"]): "Matcha Latte",
+    frozenset(["Milk", "Thai Tea"]): "Thai Tea Latte",
+    frozenset(["Milk", "Taiwan Tea", "Pearl"]): "Bubble Tea",
+    frozenset(["Red Syrup", "Milk"]): "Nom Yen",
+    frozenset(["Red Syrup", "Water"]): "Iced Red Syrup Drink",
+    frozenset(["Milk", "Coffee", "Pearl"]): "Caffe Latte with Pearl",
+    frozenset(["Milk", "Matcha", "Pearl"]): "Matcha Latte with Pearl",
+    frozenset(["Milk", "Thai Tea", "Pearl"]): "Thai Tea Latte with Pearl",
+    frozenset(["Red Syrup", "Milk", "Pearl"]): "Nom Yen with Pearl",
+}
