@@ -11,33 +11,33 @@ class Game:
         self.clock = pygame.time.Clock()
         
         # --- LOAD LOGO ---
-        # Make sure your logo is in assets/images/logo.png
         self.logo_path = os.path.join("assets", "images", "logo.png")
         
         try:
             self.logo_img = pygame.image.load(self.logo_path).convert_alpha()
-            
-            # 1. DEFINE YOUR DESIRED SIZE
-            # (Try 300x300 or whatever fits your vision)
-            desired_size = (300, 300) 
-            
-            # 2. RESIZE THE IMAGE
-            # smoothscale makes it look better than regular 'scale'
-            self.logo_img = pygame.transform.smoothscale(self.logo_img, desired_size)
-            
-            # 3. NOW CENTER THE RECT
+            self.logo_img = pygame.transform.smoothscale(self.logo_img, (450, 300))
             self.logo_rect = self.logo_img.get_rect()
-            self.logo_rect.center = (WIDTH // 2, HEIGHT // 2)
+            
+            # POSITION: Top-ish and Center
+            # WIDTH // 2 keeps it centered, HEIGHT // 3 moves it up to the top third
+            self.logo_rect.center = (WIDTH // 2, HEIGHT // 3)
+            
         except:
-            print("Logo not found! Creating a placeholder box instead.")
-            self.logo_img = pygame.Surface((300, 300))
-            self.logo_img.fill((255, 0, 255)) # Pink box
+            print("Logo not found! Using placeholder.")
+            self.logo_img = pygame.Surface((450, 300))
+            self.logo_img.fill((255, 0, 255))
             self.logo_rect = self.logo_img.get_rect()
-            self.logo_rect.center = (WIDTH // 2, HEIGHT // 2)
+            self.logo_rect.center = (WIDTH // 2, HEIGHT // 3)
 
-    def draw_text(self, text, size, x, y):
-        font = pygame.font.SysFont("arial", size)
-        text_surface = font.render(text, True, WHITE)
+        # --- BUTTON SETUP ---
+        self.btn_width, self.btn_height = 200, 60
+        self.start_btn_rect = pygame.Rect(0, 0, self.btn_width, self.btn_height)
+        # Position button in the bottom third
+        self.start_btn_rect.center = (WIDTH // 2, HEIGHT * 2 // 3)
+
+    def draw_text(self, text, size, x, y, color=WHITE):
+        font = pygame.font.SysFont("arial", size, bold=True)
+        text_surface = font.render(text, True, color)
         text_rect = text_surface.get_rect()
         text_rect.center = (x, y)
         self.screen.blit(text_surface, text_rect)
@@ -46,29 +46,39 @@ class Game:
         waiting = True
         while waiting:
             self.clock.tick(FPS)
+            mouse_pos = pygame.mouse.get_pos()
             
-            # 1. Events (Checking for exit)
+            # 1. Events
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                if event.type == pygame.KEYDOWN:
-                    waiting = False # Press any key to "start"
+                
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    # Check if the mouse clicked the button area
+                    if self.start_btn_rect.collidepoint(mouse_pos):
+                        waiting = False
             
             # 2. Drawing
             self.screen.fill(BG_COLOR)
             
-            # Draw the logo centered
+            # Draw Logo
             self.screen.blit(self.logo_img, self.logo_rect)
             
-            # Draw some instructions
-            self.draw_text("MIX-UNMATCH COOKING", 40, WIDTH // 2, HEIGHT // 2 + 150)
-            self.draw_text("Press any key to start", 20, WIDTH // 2, HEIGHT - 50)
+            # Draw Button logic (Hover effect)
+            button_color = (150, 255, 150)
+            if self.start_btn_rect.collidepoint(mouse_pos):
+                button_color = (112, 130, 62)
+            
+            # Draw the button rectangle
+            pygame.draw.rect(self.screen, button_color, self.start_btn_rect, border_radius=12)
+            # Draw the text on top of the button
+            self.draw_text("START GAME", 24, self.start_btn_rect.centerx, self.start_btn_rect.centery, color=(0, 50, 0))
             
             pygame.display.flip()
 
 if __name__ == "__main__":
     g = Game()
     g.show_homepage()
-    print("Game starts now!")
-    pygame.quit()
+    print("Transitioning to the Kitchen...")
+    # This is where you'd call g.run() or your main game loop

@@ -5,5 +5,5 @@ FPS = 60
 TITLE = "Mix-Unmatch Cooking Game"
 
 # Colors
-BG_COLOR = (30, 30, 30) # A nice dark grey
+BG_COLOR = (243, 234, 216)
 WHITE = (255, 255, 255)
