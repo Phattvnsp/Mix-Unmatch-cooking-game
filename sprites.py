@@ -22,6 +22,8 @@ class Pot(pygame.sprite.Sprite):
             self.lid_image = None # Fallback if lid missing
 
         self.rect = self.image.get_rect(center=(x, y))
+        # Shrink rect for better click detection
+        self.click_rect = self.rect.inflate(-300, -300)
 
     def update(self):
         # Check if 3 seconds have passed

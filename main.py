@@ -4,6 +4,7 @@ import os
 from settings import *
 from sprites import *
 import math
+from data.recipes import FOOD_RECIPES, DRINK_RECIPES
 
 # --- SCENE CLASSES ---
 
@@ -70,6 +71,9 @@ class KitchenScene(Scene):
         self.pot.update()
         screen.blit(self.pot.image, self.pot.rect)
         if was_cooking and not self.pot.is_cooking:
+            result = self.check_recipe()
+            print(f"Cooked: {result}")
+            # Reset ingredients
             for item in self.ingredients:
                 item.reset()
         # 3. Draw the ingredients
@@ -114,8 +118,12 @@ class KitchenScene(Scene):
                 if event.button == 1: # Left click
                     # Check if clicking the pot
                     if self.pot.rect.collidepoint(self.mouse_pos):
-                        if not self.pot.is_cooking:
+                        has_food = any(item.is_added for item in self.ingredients)
+                        if not self.pot.is_cooking and has_food:
                             self.pot.start_cooking()
+                            print(f"Cooking ... {', '.join([item.name for item in self.ingredients if item.is_added])}")
+                        else:
+                            print("No ingredients added!")
                     for item in self.ingredients:
                         if item.rect.collidepoint(self.mouse_pos):
                             print(f"Added {item.name} to the pot!")
@@ -123,7 +131,32 @@ class KitchenScene(Scene):
                             item.visible = False
                     # Check if clicking the cafe button
                     if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
-                        print("Cafe button clicked! (Functionality to be implemented)")
+                        print("Cafe button clicked!")
+    def check_recipe(self):
+        # 1. Collect names of ingredients added (using Title case to match your dict)
+        in_pot = frozenset([item.name.capitalize() for item in self.ingredients if item.is_added])
+        # 2. Look for matches in both dictionaries
+        # .get() is great because it returns None if there's no match instead of crashing
+        result = FOOD_RECIPES.get(in_pot) or DRINK_RECIPES.get(in_pot)
+        if result:
+            print(f"Result: {result}")
+            return result
+        else:
+            print("No matching recipe found.")
+            return "Mystery Goo Y-Y"
+
+class CafeScene(Scene):
+    def __init__(self, game):
+        super().__init__(game)
+    def draw(self, screen):
+        screen.fill(BG_COLOR)
+        self.game.draw_text("CAFE SCENE - Coming Soon!", 40, WIDTH // 2, HEIGHT // 2, color=NAVY)
+
+    def events(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.game.start_transition("KITCHEN")
 
 
 # --- MAIN GAME ENGINE ---
