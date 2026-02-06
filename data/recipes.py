@@ -1,5 +1,4 @@
 FOOD_RECIPES = {
-    frozenset(["Rice", "Tobiko"]): "Tobiko Sushi",
     frozenset(["Rice", "Fish",]): "Salmon Sushi",
     frozenset(["Rice", "Seaweed", "Tobiko"]): "Tobiko Roll",
     frozenset(["Rice", "Seaweed", "Fish"]): "Salmon Roll",
