@@ -2,6 +2,7 @@ import pygame
 import sys
 import os
 from settings import *
+from sprites import *
 
 # --- SCENE CLASSES ---
 
@@ -51,6 +52,7 @@ class KitchenScene(Scene):
         # Record the exact time the player entered the kitchen
         self.entry_time = pygame.time.get_ticks()
         self.display_duration = 1000 # 1 second in milliseconds
+        self.pot = Pot(game, WIDTH // 2, HEIGHT // 2 - 50)
 
     def draw(self, screen):
         self.mouse_pos = pygame.mouse.get_pos()
@@ -59,6 +61,12 @@ class KitchenScene(Scene):
             screen.blit(self.game.kitchen_bg_img, (0, 0))
         else:
             screen.fill(BG_COLOR)
+        # 2. Draw the pot
+        self.pot.update()
+        screen.blit(self.pot.image, self.pot.rect)
+        if self.pot.is_cooking:
+            lid_pos = self.pot.rect.x, self.pot.rect.y - 0
+            screen.blit(self.pot.lid_image, lid_pos)
         # Draw Cafe Button
         button_color = (159, 129, 112)
         if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
@@ -67,12 +75,13 @@ class KitchenScene(Scene):
         pygame.draw.rect(screen, button_color, self.game.cafe_btn_rect, border_radius=8)
         # 2. Draw text using the center of that rect
         self.game.draw_text("CAFE", 24, self.game.cafe_btn_rect.centerx, self.game.cafe_btn_rect.centery)
+        self.game.draw_text("Add ingredients then tap the pot to cook!", 20, WIDTH // 2, HEIGHT - 50 , color=NAVY)
 
         # 2. Check if we should still show the "KITCHEN" text
         current_time = pygame.time.get_ticks()
         if current_time - self.entry_time < self.display_duration:
             # It hasn't been 1 second yet, so draw it!
-            self.game.draw_text("KITCHEN", 65, WIDTH // 2, HEIGHT // 5, color=NAVY)
+            self.game.draw_text("KITCHEN", 65, WIDTH // 2, HEIGHT // 7, color=NAVY)
 
     def events(self, events):
         self.mouse_pos = pygame.mouse.get_pos()
@@ -80,6 +89,10 @@ class KitchenScene(Scene):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.game.start_transition("HOME")
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.pot.rect.collidepoint(self.mouse_pos):
+                    self.pot.start_cooking()
+                    print("Pot clicked! Time to cook!")
 
 
 # --- MAIN GAME ENGINE ---
