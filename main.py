@@ -43,6 +43,7 @@ class HomeScene(Scene):
             
         pygame.draw.rect(screen, button_color, self.game.start_btn_rect, border_radius=12)
         self.game.draw_text("START GAME", 24, self.game.start_btn_rect.centerx, self.game.start_btn_rect.centery, color=(0, 50, 0))
+        self.game.draw_text("Or press Enter to start", 20, WIDTH // 2, HEIGHT - 50 , color=(0, 50, 0))
 
 class KitchenScene(Scene):
     def draw(self, screen):
