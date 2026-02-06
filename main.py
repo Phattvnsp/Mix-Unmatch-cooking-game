@@ -46,16 +46,41 @@ class HomeScene(Scene):
         self.game.draw_text("Or press Enter to start", 20, WIDTH // 2, HEIGHT - 50 , color=(0, 50, 0))
 
 class KitchenScene(Scene):
+    def __init__(self, game):
+        super().__init__(game)
+        # Record the exact time the player entered the kitchen
+        self.entry_time = pygame.time.get_ticks()
+        self.display_duration = 1000 # 1 second in milliseconds
+
     def draw(self, screen):
-        screen.fill((50, 70, 90)) # A nice kitchen blue-grey
-        self.game.draw_text("KITCHEN SCENE", 50, WIDTH // 2, HEIGHT // 2)
-        self.game.draw_text("Press ESC to go home", 20, WIDTH // 2, HEIGHT - 50)
+        self.mouse_pos = pygame.mouse.get_pos()
+        # 1. Draw the background first
+        if self.game.kitchen_bg_img:
+            screen.blit(self.game.kitchen_bg_img, (0, 0))
+        else:
+            screen.fill(BG_COLOR)
+        # Draw Cafe Button
+        button_color = (159, 129, 112)
+        if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
+            button_color = (111, 78, 55)
+        # 1. Draw using the full rect object
+        pygame.draw.rect(screen, button_color, self.game.cafe_btn_rect, border_radius=8)
+        # 2. Draw text using the center of that rect
+        self.game.draw_text("CAFE", 24, self.game.cafe_btn_rect.centerx, self.game.cafe_btn_rect.centery)
+
+        # 2. Check if we should still show the "KITCHEN" text
+        current_time = pygame.time.get_ticks()
+        if current_time - self.entry_time < self.display_duration:
+            # It hasn't been 1 second yet, so draw it!
+            self.game.draw_text("KITCHEN", 65, WIDTH // 2, HEIGHT // 5, color=NAVY)
 
     def events(self, events):
+        self.mouse_pos = pygame.mouse.get_pos()
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.game.start_transition("HOME")
+
 
 # --- MAIN GAME ENGINE ---
 
@@ -67,9 +92,10 @@ class Game:
         self.clock = pygame.time.Clock()
         
         # Assets Paths
-        self.bg_path = os.path.join("assets", "images", "home_bg.png")
+        self.homebg_path = os.path.join("assets", "images", "home_bg.png")
         self.logo_path = os.path.join("assets", "images", "logo.png")
         self.font_path = os.path.join("assets", "fonts", "LoveDays-2v7Oe.ttf")
+        self.kitchenbg_path = os.path.join("assets", "images", "kitchen_bg.png")
 
         # Load Assets
         self.load_assets()
@@ -77,6 +103,8 @@ class Game:
         # Button Setup
         self.start_btn_rect = pygame.Rect(0, 0, 200, 60)
         self.start_btn_rect.center = (WIDTH // 2, HEIGHT * 2 // 2.7)
+        self.cafe_btn_rect = pygame.Rect(0, 0, 60, 50)
+        self.cafe_btn_rect.midright = (WIDTH - 20, HEIGHT // 2)
 
         # State & Transition Setup
         self.scene = HomeScene(self)
@@ -99,9 +127,13 @@ class Game:
             self.logo_rect = self.logo_img.get_rect(center=(WIDTH // 2, HEIGHT // 2.5))
         # BG
         try:
-            self.bg_img = pygame.image.load(self.bg_path).convert()
+            self.bg_img = pygame.image.load(self.homebg_path).convert()
             self.bg_img = pygame.transform.smoothscale(self.bg_img, (WIDTH, HEIGHT))
         except: self.bg_img = None
+        try:
+            self.kitchen_bg_img = pygame.image.load(self.kitchenbg_path).convert()
+            self.kitchen_bg_img = pygame.transform.smoothscale(self.kitchen_bg_img, (WIDTH, HEIGHT))
+        except: self.kitchen_bg_img = None
 
     def draw_text(self, text, size, x, y, color=WHITE):
         try:
