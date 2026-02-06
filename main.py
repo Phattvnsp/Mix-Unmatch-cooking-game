@@ -3,6 +3,7 @@ import sys
 import os
 from settings import *
 from sprites import *
+import math
 
 # --- SCENE CLASSES ---
 
@@ -53,20 +54,40 @@ class KitchenScene(Scene):
         self.entry_time = pygame.time.get_ticks()
         self.display_duration = 1000 # 1 second in milliseconds
         self.pot = Pot(game, WIDTH // 2, HEIGHT // 2 - 50)
+        self.ingredients = pygame.sprite.Group()
+        self.eggs = Ingredient(self.game, "Egg", 150, HEIGHT // 4)
+        self.ingredients.add(self.eggs)
 
     def draw(self, screen):
         self.mouse_pos = pygame.mouse.get_pos()
-        # 1. Draw the background first
+        # 1. Draw the background
         if self.game.kitchen_bg_img:
             screen.blit(self.game.kitchen_bg_img, (0, 0))
         else:
             screen.fill(BG_COLOR)
         # 2. Draw the pot
+        was_cooking = self.pot.is_cooking
         self.pot.update()
         screen.blit(self.pot.image, self.pot.rect)
+        if was_cooking and not self.pot.is_cooking:
+            for item in self.ingredients:
+                item.reset()
+        # 3. Draw the ingredients
+        for item in self.ingredients:
+            if item.visible:
+                screen.blit(item.image, item.rect)
+        # 4. If cooking, draw the lid and overlay
         if self.pot.is_cooking:
-            lid_pos = self.pot.rect.x, self.pot.rect.y - 0
-            screen.blit(self.pot.lid_image, lid_pos)
+            lid_pos = self.pot.rect.x, self.pot.rect.y
+            if self.pot.lid_image:
+                screen.blit(self.pot.lid_image, lid_pos)
+            overlay = pygame.Surface((WIDTH, HEIGHT))
+            overlay.set_alpha(160) # Darken the background
+            overlay.fill((0, 0, 0))
+            screen.blit(overlay, (0, 0))
+            pulse_val = 155 + int(100 * math.sin(pygame.time.get_ticks() * 0.005))
+            self.game.draw_text("Cooking...", 80, WIDTH // 2, HEIGHT // 2, 
+                                color=WHITE, alpha=pulse_val)
         # Draw Cafe Button
         button_color = (159, 129, 112)
         if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
@@ -90,9 +111,19 @@ class KitchenScene(Scene):
                 if event.key == pygame.K_ESCAPE:
                     self.game.start_transition("HOME")
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.pot.rect.collidepoint(self.mouse_pos):
-                    self.pot.start_cooking()
-                    print("Pot clicked! Time to cook!")
+                if event.button == 1: # Left click
+                    # Check if clicking the pot
+                    if self.pot.rect.collidepoint(self.mouse_pos):
+                        if not self.pot.is_cooking:
+                            self.pot.start_cooking()
+                    for item in self.ingredients:
+                        if item.rect.collidepoint(self.mouse_pos):
+                            print(f"Added {item.name} to the pot!")
+                            item.is_added = True
+                            item.visible = False
+                    # Check if clicking the cafe button
+                    if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
+                        print("Cafe button clicked! (Functionality to be implemented)")
 
 
 # --- MAIN GAME ENGINE ---
@@ -148,12 +179,14 @@ class Game:
             self.kitchen_bg_img = pygame.transform.smoothscale(self.kitchen_bg_img, (WIDTH, HEIGHT))
         except: self.kitchen_bg_img = None
 
-    def draw_text(self, text, size, x, y, color=WHITE):
+    def draw_text(self, text, size, x, y, color=WHITE, alpha=255):
         try:
             font = pygame.font.Font(self.font_path, size) if self.font_path else pygame.font.SysFont("arial", size)
         except: font = pygame.font.SysFont("arial", size)
         text_surf = font.render(text, True, color)
-        self.screen.blit(text_surf, text_surf.get_rect(center=(x, y)))
+        text_surf.set_alpha(alpha)
+        text_rect = text_surf.get_rect(center=(x, y))
+        self.screen.blit(text_surf, text_rect)
 
     def start_transition(self, next_scene_name):
         self.state = "TRANSITIONING"
