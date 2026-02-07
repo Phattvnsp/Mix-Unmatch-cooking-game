@@ -51,62 +51,155 @@ class HomeScene(Scene):
 class KitchenScene(Scene):
     def __init__(self, game):
         super().__init__(game)
-        # Record the exact time the player entered the kitchen
         self.entry_time = pygame.time.get_ticks()
-        self.display_duration = 1000 # 1 second in milliseconds
-        self.pot = Pot(game, WIDTH // 2, HEIGHT // 2 - 50)
+        self.display_duration = 1000
+        
+        # 1. Setup the Pot
+        self.pot = Pot(game, WIDTH // 2, HEIGHT // 2 - 10)
+        
+        # 2. Setup Ingredients Group
         self.ingredients = pygame.sprite.Group()
-        self.eggs = Ingredient(self.game, "Egg", 150, HEIGHT // 4)
-        self.ingredients.add(self.eggs)
+        
+        # --- THE SMART SPAWN LOOP ---
+        
+        # A list of everything you want on the shelf right now
+        # Make sure you have .png images for all of these!
+        shelf_list = [
+            "Egg"
+        ]
+        
+        # Grid Settings
+        start_x = 80      # Where the first item starts (Left)
+        start_y = 45     # Where the first row starts (Top)
+        gap_x = 90        # Horizontal space between items
+        gap_y = 90        # Vertical space between rows
+        cols = 6          # How many items before starting a new row
+        
+        for i, item_name in enumerate(shelf_list):
+            # Math to calculate row and column
+            col = i % cols              # 0, 1, 2, 3, 4, 5, 0, 1...
+            row = i // cols             # 0, 0, 0, 0, 0, 0, 1, 1...
+            
+            x = start_x + (col * gap_x)
+            y = start_y + (row * gap_y)
+            
+            # Create the ingredient and add to group
+            new_item = Ingredient(self.game, item_name, x, y)
+            self.ingredients.add(new_item)
+
+        self.showing_result = False
+        self.result_start_time = 0
+        self.result_duration = 3000 # Show result for 3 seconds
+        self.current_dish_name = ""
+        self.current_dish_image = None
 
     def draw(self, screen):
         self.mouse_pos = pygame.mouse.get_pos()
-        # 1. Draw the background
-        if self.game.kitchen_bg_img:
-            screen.blit(self.game.kitchen_bg_img, (0, 0))
-        else:
-            screen.fill(BG_COLOR)
-        # 2. Draw the pot
+        
+        # 1. Draw Background & Pot
+        if self.game.kitchen_bg_img: screen.blit(self.game.kitchen_bg_img, (0, 0))
+        else: screen.fill(BG_COLOR)
+        
+        # Logic to detect when cooking JUST finished
         was_cooking = self.pot.is_cooking
         self.pot.update()
+        
+        # 2. Draw Pot Body
         screen.blit(self.pot.image, self.pot.rect)
+
+        # 3. IF COOKING FINISHED: Trigger the Result Screen
         if was_cooking and not self.pot.is_cooking:
-            result = self.check_recipe()
-            print(f"Cooked: {result}")
-            # Reset ingredients
+            self.trigger_result_screen()
+
+        # 4. Draw Ingredients (Hidden if cooking or showing result)
+        if not self.showing_result: 
+            # Only draw ingredients if we are NOT showing the result screen
             for item in self.ingredients:
-                item.reset()
-        # 3. Draw the ingredients
-        for item in self.ingredients:
-            if item.visible:
-                screen.blit(item.image, item.rect)
-        # 4. If cooking, draw the lid and overlay
+                if item.visible:
+                    screen.blit(item.image, item.rect)
+
+        # 5. COOKING ANIMATION (Lid + Pulsing Text)
         if self.pot.is_cooking:
             lid_pos = self.pot.rect.x, self.pot.rect.y
-            if self.pot.lid_image:
-                screen.blit(self.pot.lid_image, lid_pos)
+            if self.pot.lid_image: screen.blit(self.pot.lid_image, lid_pos)
+            
+            # Dark Overlay
             overlay = pygame.Surface((WIDTH, HEIGHT))
-            overlay.set_alpha(160) # Darken the background
+            overlay.set_alpha(160)
             overlay.fill((0, 0, 0))
             screen.blit(overlay, (0, 0))
+            
+            # Pulsing Text
             pulse_val = 155 + int(100 * math.sin(pygame.time.get_ticks() * 0.005))
-            self.game.draw_text("Cooking...", 80, WIDTH // 2, HEIGHT // 2, 
-                                color=WHITE, alpha=pulse_val)
-        # Draw Cafe Button
-        button_color = (159, 129, 112)
-        if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
-            button_color = (111, 78, 55)
-        # 1. Draw using the full rect object
-        pygame.draw.rect(screen, button_color, self.game.cafe_btn_rect, border_radius=8)
-        # 2. Draw text using the center of that rect
-        self.game.draw_text("CAFE", 24, self.game.cafe_btn_rect.centerx, self.game.cafe_btn_rect.centery)
-        self.game.draw_text("Add ingredients then tap the pot to cook!", 20, WIDTH // 2, HEIGHT - 50 , color=NAVY)
+            self.game.draw_text("Cooking...", 80, WIDTH // 2, HEIGHT // 2, color=WHITE, alpha=pulse_val)
 
-        # 2. Check if we should still show the "KITCHEN" text
-        current_time = pygame.time.get_ticks()
-        if current_time - self.entry_time < self.display_duration:
-            # It hasn't been 1 second yet, so draw it!
+        # 6. --- THE NEW RESULT SCREEN ---
+        if self.showing_result:
+            self.draw_result(screen)
+
+        # 7. UI Elements (Buttons/Text) - Only show if NOT showing result
+        if not self.showing_result:
+            self.draw_ui(screen)
+
+    def draw_ui(self, screen):
+        # Cafe Button
+        button_color = (159, 129, 112)
+        if self.game.cafe_btn_rect.collidepoint(self.mouse_pos): button_color = (111, 78, 55)
+        pygame.draw.rect(screen, button_color, self.game.cafe_btn_rect, border_radius=8)
+        self.game.draw_text("CAFE", 24, self.game.cafe_btn_rect.centerx, self.game.cafe_btn_rect.centery)
+        self.game.draw_text("Add ingredients then tap the pot!", 20, WIDTH // 2, HEIGHT - 50 , color=NAVY)
+        
+        # "KITCHEN" Entry Text
+        if pygame.time.get_ticks() - self.entry_time < self.display_duration:
             self.game.draw_text("KITCHEN", 65, WIDTH // 2, HEIGHT // 7, color=NAVY)
+
+    def trigger_result_screen(self):
+        # 1. Calculate what we made
+        self.current_dish_name = self.check_recipe()
+        
+        # 2. Add to unlocked menu
+        self.game.unlocked_dishes.add(self.current_dish_name)
+        
+        # 3. Decide which image to show
+        # Try to load an image named "Pad Thai.png", otherwise use "meme.png"
+        try:
+            path = os.path.join("assets", "images", f"{self.current_dish_name}.png")
+            img = pygame.image.load(path).convert_alpha()
+            self.current_dish_image = pygame.transform.smoothscale(img, (200, 200))
+        except:
+            # If image not found (or it's Mystery/Failed), use the MEME!
+            self.current_dish_image = self.game.meme_img
+
+        # 4. Start the timer
+        self.showing_result = True
+        self.result_start_time = pygame.time.get_ticks()
+
+    def draw_result(self, screen):
+        # 1. Dim Background
+        overlay = pygame.Surface((WIDTH, HEIGHT))
+        overlay.set_alpha(200) # Darker than cooking
+        overlay.fill((0, 0, 0))
+        screen.blit(overlay, (0, 0))
+
+        # 2. Draw Shiny Effect
+        shiny_rect = self.game.shiny_img.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
+        screen.blit(self.game.shiny_img, shiny_rect)
+
+        # 3. Draw The Dish Image
+        if self.current_dish_image:
+            dish_rect = self.current_dish_image.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
+            screen.blit(self.current_dish_image, dish_rect)
+
+        # 4. Draw The Name
+        self.game.draw_text("YOU MADE:", 30, WIDTH // 2, HEIGHT // 2 + 80, color=WHITE)
+        self.game.draw_text(self.current_dish_name, 50, WIDTH // 2, HEIGHT // 2 + 130, color=(255, 255, 255)) # White text
+
+        # 5. Check Timer to Close
+        if pygame.time.get_ticks() - self.result_start_time > self.result_duration:
+            self.showing_result = False
+            # NOW we reset the ingredients
+            for item in self.ingredients:
+                item.reset()
 
     def events(self, events):
         self.mouse_pos = pygame.mouse.get_pos()
@@ -114,24 +207,35 @@ class KitchenScene(Scene):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.game.start_transition("HOME")
+            
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1: # Left click
-                    # Check if clicking the pot
+                    
+                    # 1. Check Ingredient Clicks (Only if NOT cooking)
+                    if not self.pot.is_cooking:
+                        for item in self.ingredients:
+                            # Only check visible items
+                            if item.visible and item.rect.collidepoint(self.mouse_pos):
+                                print(f"Added {item.name} to the pot!")
+                                item.is_added = True
+                                item.visible = False
+                    
+                    # 2. Check Pot Click
                     if self.pot.rect.collidepoint(self.mouse_pos):
                         has_food = any(item.is_added for item in self.ingredients)
-                        if not self.pot.is_cooking and has_food:
-                            self.pot.start_cooking()
-                            print(f"Cooking ... {', '.join([item.name for item in self.ingredients if item.is_added])}")
+                        if not self.pot.is_cooking:
+                            if has_food:
+                                self.pot.start_cooking()
+                                print(f"Cooking ... {[item.name for item in self.ingredients if item.is_added]}")
+                            else:
+                                print("Pot is empty!")
                         else:
-                            print("No ingredients added!")
-                    for item in self.ingredients:
-                        if item.rect.collidepoint(self.mouse_pos):
-                            print(f"Added {item.name} to the pot!")
-                            item.is_added = True
-                            item.visible = False
-                    # Check if clicking the cafe button
+                            print("Already cooking!")
+
+                    # 3. Check Cafe Button
                     if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
                         print("Cafe button clicked!")
+
     def check_recipe(self):
         # 1. Collect names of ingredients added (using Title case to match your dict)
         in_pot = frozenset([item.name.capitalize() for item in self.ingredients if item.is_added])
@@ -143,7 +247,7 @@ class KitchenScene(Scene):
             return result
         else:
             print("No matching recipe found.")
-            return "Mystery Goo Y-Y"
+            return "Failed Dish"
 
 class CafeScene(Scene):
     def __init__(self, game):
@@ -174,6 +278,7 @@ class Game:
         self.font_path = os.path.join("assets", "fonts", "LoveDays-2v7Oe.ttf")
         self.kitchenbg_path = os.path.join("assets", "images", "kitchen_bg.png")
 
+        self.unlocked_dishes = set()
         # Load Assets
         self.load_assets()
 
@@ -211,6 +316,21 @@ class Game:
             self.kitchen_bg_img = pygame.image.load(self.kitchenbg_path).convert()
             self.kitchen_bg_img = pygame.transform.smoothscale(self.kitchen_bg_img, (WIDTH, HEIGHT))
         except: self.kitchen_bg_img = None
+        try:
+            self.shiny_img = pygame.image.load(os.path.join("assets", "images", "shiny.png")).convert_alpha()
+            # Make it big!
+            self.shiny_img = pygame.transform.smoothscale(self.shiny_img, (600, 600)) 
+        except:
+            self.shiny_img = pygame.Surface((400, 400)) # Fallback
+            self.shiny_img.fill((255, 255, 0))
+            self.shiny_img.set_alpha(100)
+
+        try:
+            self.meme_img = pygame.image.load(os.path.join("assets", "images", "meme.png")).convert_alpha()
+            self.meme_img = pygame.transform.smoothscale(self.meme_img, (200, 200))
+        except:
+            self.meme_img = pygame.Surface((200, 200))
+            self.meme_img.fill((100, 100, 100))
 
     def draw_text(self, text, size, x, y, color=WHITE, alpha=255):
         try:
