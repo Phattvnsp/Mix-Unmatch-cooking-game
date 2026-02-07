@@ -140,6 +140,15 @@ class KitchenScene(Scene):
         # 7. UI Elements (Buttons/Text) - Only show if NOT showing result
         if not self.showing_result:
             self.draw_ui(screen)
+    def get_added_ingredients_text(self):
+        # Get names of all items where is_added is True
+        added_names = [item.name for item in self.ingredients if item.is_added]
+        
+        if not added_names:
+            return "empty"
+        
+        # Joins them with commas (e.g., "Egg, Milk, Flour")
+        return ", ".join(added_names)
 
     def draw_ui(self, screen):
         # Cafe Button
@@ -152,6 +161,15 @@ class KitchenScene(Scene):
         # "KITCHEN" Entry Text
         if pygame.time.get_ticks() - self.entry_time < self.display_duration:
             self.game.draw_text("KITCHEN", 65, WIDTH // 2, HEIGHT // 7, color=NAVY)
+        
+        ingredients_list = self.get_added_ingredients_text()
+        # 2. Draw the text under the pot
+        self.game.draw_text(
+            f"In Pot: {ingredients_list}", 
+            22, 
+            WIDTH // 2, 
+            HEIGHT // 2 + 140, 
+            color=NAVY)
 
     def trigger_result_screen(self):
         # 1. Calculate what we made
