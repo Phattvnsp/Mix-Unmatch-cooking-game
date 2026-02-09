@@ -65,7 +65,7 @@ class KitchenScene(Scene):
         # A list of everything you want on the shelf right now
         # Make sure you have .png images for all of these!
         shelf_list = [
-            "Egg", "Cheese"
+            "Egg", "Cheese", "Rice", "Fish"
         ]
         
         # Grid Settings
@@ -337,7 +337,7 @@ class Game:
         try:
             self.shiny_img = pygame.image.load(os.path.join("assets", "images", "shiny.png")).convert_alpha()
             # Make it big!
-            self.shiny_img = pygame.transform.smoothscale(self.shiny_img, (600, 600)) 
+            self.shiny_img = pygame.transform.smoothscale(self.shiny_img, (450, 450)) 
         except:
             self.shiny_img = pygame.Surface((400, 400)) # Fallback
             self.shiny_img.fill((255, 255, 0))
