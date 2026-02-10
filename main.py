@@ -388,7 +388,7 @@ class CafeScene(Scene):
             
             # Pulsing Text
             pulse_val = 155 + int(100 * math.sin(pygame.time.get_ticks() * 0.005))
-            self.game.draw_text("Cooking...", 80, WIDTH // 2, HEIGHT // 2, color=WHITE, alpha=pulse_val)
+            self.game.draw_text("Shaking...", 80, WIDTH // 2, HEIGHT // 2, color=WHITE, alpha=pulse_val)
 
         # 6. --- THE NEW RESULT SCREEN ---
         if self.showing_result:
@@ -413,7 +413,7 @@ class CafeScene(Scene):
         if self.game.cafe_btn_rect.collidepoint(self.mouse_pos): button_color = (111, 78, 55)
         pygame.draw.rect(screen, button_color, self.game.cafe_btn_rect, border_radius=8)
         self.game.draw_text("Kitchen", 16, self.game.cafe_btn_rect.centerx, self.game.cafe_btn_rect.centery)
-        self.game.draw_text("Add ingredients then tap the pot!", 20, WIDTH // 2, HEIGHT - 50 , color=NAVY)
+        self.game.draw_text("Add ingredients then tap the shaker!", 20, WIDTH // 2, HEIGHT - 50 , color=NAVY)
         
         # "KITCHEN" Entry Text
         if pygame.time.get_ticks() - self.entry_time < self.display_duration:
@@ -422,7 +422,7 @@ class CafeScene(Scene):
         ingredients_list = self.get_added_ingredients_text()
         # 2. Draw the text under the pot
         self.game.draw_text(
-            f"In Pot: {ingredients_list}", 
+            f"In shaker: {ingredients_list}", 
             22, 
             WIDTH // 2, 
             HEIGHT // 2 + 140, 
@@ -491,7 +491,7 @@ class CafeScene(Scene):
                         for item in self.ingredients:
                             # Only check visible items
                             if item.visible and item.rect.collidepoint(self.mouse_pos):
-                                print(f"Added {item.name} to the pot!")
+                                print(f"Added {item.name} to the shaker!")
                                 item.is_added = True
                                 item.visible = False
                     
@@ -501,11 +501,11 @@ class CafeScene(Scene):
                         if not self.pot.is_cooking:
                             if has_food:
                                 self.pot.start_cooking()
-                                print(f"Cooking ... {[item.name for item in self.ingredients if item.is_added]}")
+                                print(f"Shaking ... {[item.name for item in self.ingredients if item.is_added]}")
                             else:
-                                print("Pot is empty!")
+                                print("Shaker is empty!")
                         else:
-                            print("Already cooking!")
+                            print("Already shaking!")
 
                     # 3. Check Cafe Button
                     if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
