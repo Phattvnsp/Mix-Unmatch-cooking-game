@@ -49,6 +49,17 @@ class HomeScene(Scene):
         self.game.draw_text("Or press Enter to start", 20, WIDTH // 2, HEIGHT - 50 , color=(0, 50, 0))
 
 class KitchenScene(Scene):
+    def events(self, events):
+        mouse_pos = pygame.mouse.get_pos()
+        for event in events:
+            # Start with Click
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.game.start_btn_rect.collidepoint(mouse_pos):
+                    self.game.start_transition("CAFE")
+            # Start with Enter Key
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    self.game.start_transition("CAFE")
     def __init__(self, game):
         super().__init__(game)
         self.entry_time = pygame.time.get_ticks()
@@ -253,6 +264,7 @@ class KitchenScene(Scene):
                     # 3. Check Cafe Button
                     if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
                         print("Cafe button clicked!")
+                        self.game.start_transition("CAFE")
 
     def check_recipe(self):
         # 1. Collect names of ingredients added (using Title case to match your dict)
@@ -279,6 +291,27 @@ class CafeScene(Scene):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.game.start_transition("KITCHEN")
+    def draw_ui(self, screen):
+        # Kitchen Button
+        button_color = (159, 129, 112)
+        if self.game.cafe_btn_rect.collidepoint(self.mouse_pos): button_color = (111, 78, 55)
+        pygame.draw.rect(screen, button_color, self.game.cafe_btn_rect, border_radius=8)
+        self.game.draw_text("KITCHEN", 24, self.game.cafe_btn_rect.centerx, self.game.cafe_btn_rect.centery)
+        self.game.draw_text("Add ingredients then tap the pot!", 20, WIDTH // 2, HEIGHT - 50 , color=NAVY)
+        
+        # Cafe" Entry Text
+        if pygame.time.get_ticks() - self.entry_time < self.display_duration:
+            self.game.draw_text("CAFE", 65, WIDTH // 2, HEIGHT // 7, color=NAVY)
+        
+        ingredients_list = self.get_added_ingredients_text()
+        # 2. Draw the text under the pot
+        self.game.draw_text(
+            f"In Pot: {ingredients_list}", 
+            22, 
+            WIDTH // 2, 
+            HEIGHT // 2 + 140, 
+            color=NAVY)
+
 
 
 # --- MAIN GAME ENGINE ---
@@ -377,6 +410,7 @@ class Game:
                 if self.fade_alpha >= 255:
                     # Switch the scene for real once it's fully black
                     if self.next_state_name == "KITCHEN": self.scene = KitchenScene(self)
+                    if self.next_state_name == "CAFE": self.scene = CafeScene(self)
                     if self.next_state_name == "HOME": self.scene = HomeScene(self)
                     self.state = "NORMAL"
                     self.fade_alpha = 0
