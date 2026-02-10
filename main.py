@@ -163,15 +163,17 @@ class KitchenScene(Scene):
 
     def draw_ui(self, screen):
         # Cafe Button
+        display_rect = self.game.cafe_btn_rect.inflate(20, 20)
+        box_color = (159, 129, 112) 
+        if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
+            box_color = (111, 78, 55) # Darker when hovering
+        pygame.draw.rect(screen, box_color, display_rect, border_radius=10)
+
         if self.game.cafe_icon:
-            if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
-                # Draw it slightly larger or just normally? Let's keep it simple for now.
-                # You could also tint it here if you wanted.
-                screen.blit(self.game.cafe_icon, self.game.cafe_btn_rect)
-                # Draw a white outline to show it's clickable
-                pygame.draw.rect(screen, (255, 255, 255), self.game.cafe_btn_rect, 2, border_radius=8)
-            else:
-                screen.blit(self.game.cafe_icon, self.game.cafe_btn_rect)
+            # We need to center the image inside the button rect
+            icon_rect = self.game.cafe_icon.get_rect(center=self.game.cafe_btn_rect.center)
+            screen.blit(self.game.cafe_icon, icon_rect)
+    
         else:
             # FALLBACK : If image is missing, draw the brown box
             button_color = (159, 129, 112)
