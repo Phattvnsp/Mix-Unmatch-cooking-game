@@ -76,14 +76,14 @@ class KitchenScene(Scene):
         # A list of everything you want on the shelf right now
         # Make sure you have .png images for all of these!
         shelf_list = [
-            "Egg", "Cheese", "Rice", "Fish","Seaweed"
+            "Egg", "Cheese", "Rice", "Fish", "Seaweed", "Tobiko"
         ]
         
         # Grid Settings
         start_x = 80      # Where the first item starts (Left)
         start_y = 45     # Where the first row starts (Top)
         gap_x = 90        # Horizontal space between items
-        gap_y = 90        # Vertical space between rows
+        gap_y = 110        # Vertical space between rows
         cols = 6          # How many items before starting a new row
         
         for i, item_name in enumerate(shelf_list):
