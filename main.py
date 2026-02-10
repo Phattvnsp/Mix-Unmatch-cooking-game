@@ -163,10 +163,23 @@ class KitchenScene(Scene):
 
     def draw_ui(self, screen):
         # Cafe Button
-        button_color = (159, 129, 112)
-        if self.game.cafe_btn_rect.collidepoint(self.mouse_pos): button_color = (111, 78, 55)
-        pygame.draw.rect(screen, button_color, self.game.cafe_btn_rect, border_radius=8)
-        self.game.draw_text("CAFE", 24, self.game.cafe_btn_rect.centerx, self.game.cafe_btn_rect.centery)
+        if self.game.cafe_icon:
+            if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
+                # Draw it slightly larger or just normally? Let's keep it simple for now.
+                # You could also tint it here if you wanted.
+                screen.blit(self.game.cafe_icon, self.game.cafe_btn_rect)
+                # Draw a white outline to show it's clickable
+                pygame.draw.rect(screen, (255, 255, 255), self.game.cafe_btn_rect, 2, border_radius=8)
+            else:
+                screen.blit(self.game.cafe_icon, self.game.cafe_btn_rect)
+        else:
+            # FALLBACK : If image is missing, draw the brown box
+            button_color = (159, 129, 112)
+            if self.game.cafe_btn_rect.collidepoint(self.mouse_pos): 
+                button_color = (111, 78, 55)
+            pygame.draw.rect(screen, button_color, self.game.cafe_btn_rect, border_radius=8)
+            self.game.draw_text("CAFE", 24, self.game.cafe_btn_rect.centerx, self.game.cafe_btn_rect.centery)
+
         self.game.draw_text("Add ingredients then tap the pot!", 20, WIDTH // 2, HEIGHT - 50 , color=NAVY)
         
         # "KITCHEN" Entry Text
@@ -526,6 +539,7 @@ class Game:
         self.logo_path = os.path.join("assets", "images", "logo.png")
         self.font_path = os.path.join("assets", "fonts", "LoveDays-2v7Oe.ttf")
         self.kitchenbg_path = os.path.join("assets", "images", "kitchen_bg.png")
+        self.cafeicon_path = os.path.join("assets", "images", "cafe_icon.png")
 
         self.unlocked_dishes = set()
         # Load Assets
@@ -580,6 +594,14 @@ class Game:
         except:
             self.meme_img = pygame.Surface((200, 200))
             self.meme_img.fill((100, 100, 100))
+        # Icons
+        try:
+            self.cafe_icon = pygame.image.load(os.path.join("assets", "images", "cafeicon.png")).convert_alpha()
+            # Resize it to match your button size (60x50)
+            self.cafe_icon = pygame.transform.smoothscale(self.cafe_icon, (60, 50))
+        except:
+            print("Cafe icon not found!")
+            self.cafe_icon = None # We will use this to check if we should draw the fallback text
 
     def draw_text(self, text, size, x, y, color=WHITE, alpha=255):
         try:
