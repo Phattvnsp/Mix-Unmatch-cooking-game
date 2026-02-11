@@ -256,29 +256,33 @@ class KitchenScene(Scene):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1: # Left click
                     
-                    # 1. Check Ingredient Clicks (Only if NOT cooking)
+                    clicked_something = False # <--- 1. Reset this flag
+                    
+                    # 2. Check Ingredient Clicks
                     if not self.pot.is_cooking:
                         for item in self.ingredients:
-                            # Only check visible items
                             if item.visible and item.rect.collidepoint(self.mouse_pos):
                                 print(f"Added {item.name} to the pot!")
                                 item.is_added = True
                                 item.visible = False
+                                clicked_something = True # <--- We found a click!
+                                break # Stop checking other ingredients
                     
-                    # 2. Check Pot Click
-                    if self.pot.rect.collidepoint(self.mouse_pos):
-                        has_food = any(item.is_added for item in self.ingredients)
-                        if not self.pot.is_cooking:
-                            if has_food:
-                                self.pot.start_cooking()
-                                print(f"Cooking ... {[item.name for item in self.ingredients if item.is_added]}")
+                    # 3. Check Pot Click (ONLY if we didn't just click an ingredient)
+                    if not clicked_something: # <--- This is the magic fix!
+                        if self.pot.rect.collidepoint(self.mouse_pos):
+                            has_food = any(item.is_added for item in self.ingredients)
+                            if not self.pot.is_cooking:
+                                if has_food:
+                                    self.pot.start_cooking()
+                                    print(f"Cooking ... {[item.name for item in self.ingredients if item.is_added]}")
+                                else:
+                                    print("Pot is empty!")
                             else:
-                                print("Pot is empty!")
-                        else:
-                            print("Already cooking!")
+                                print("Already cooking!")
 
-                    # 3. Check Cafe Button
-                    if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
+                    # 4. Check Cafe Button (Only if we didn't click food or pot)
+                    if not clicked_something and self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
                         print("Cafe button clicked!")
                         self.game.start_transition("CAFE")
 
