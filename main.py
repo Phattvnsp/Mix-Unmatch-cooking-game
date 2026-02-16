@@ -288,7 +288,7 @@ class KitchenScene(Scene):
 
     def check_recipe(self):
         # 1. Collect names of ingredients added (using Title case to match your dict)
-        in_pot = frozenset([item.name.capitalize() for item in self.ingredients if item.is_added])
+        in_pot = frozenset([item.name for item in self.ingredients if item.is_added])
         # 2. Look for matches in both dictionaries
         # .get() is great because it returns None if there's no match instead of crashing
         result = FOOD_RECIPES.get(in_pot) or DRINK_RECIPES.get(in_pot)
@@ -317,7 +317,7 @@ class CafeScene(Scene):
         self.display_duration = 1000
         
         # 1. Setup the shaker
-        self.shaker = Shaker(game, WIDTH // 2, HEIGHT // 2 - 5)
+        self.shaker = Shaker(game, WIDTH // 2, HEIGHT // 2 - 20)
         
         # 2. Setup Ingredients Group
         self.ingredients = pygame.sprite.Group()
@@ -358,7 +358,7 @@ class CafeScene(Scene):
     def draw(self, screen):
         self.mouse_pos = pygame.mouse.get_pos()
         
-        # 1. Draw Background & Pot
+        # 1. Draw Background & Shaker
         if self.game.kitchen_bg_img: screen.blit(self.game.kitchen_bg_img, (0, 0))
         else: screen.fill(BG_COLOR)
         
@@ -366,7 +366,7 @@ class CafeScene(Scene):
         was_shaking = self.shaker.is_shaking
         self.shaker.update()
         
-        # 2. Draw Pot Body
+        # 2. Draw Shaker Body
         screen.blit(self.shaker.image, self.shaker.rect)
 
         # 3. IF COOKING FINISHED: Trigger the Result Screen
