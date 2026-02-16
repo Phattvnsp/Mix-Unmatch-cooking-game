@@ -382,7 +382,7 @@ class CafeScene(Scene):
 
         # 5. COOKING ANIMATION (Lid + Pulsing Text)
         if self.shaker.is_shaking:
-            lid_Shaker = self.shaker.rect.x, self.shaker.rect.y -75
+            lid_Shaker = self.shaker.rect.x, self.shaker.rect.y -85
             if self.shaker.lid_image: screen.blit(self.shaker.lid_image, lid_Shaker)
             
             # Dark Overlay
