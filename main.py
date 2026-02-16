@@ -316,8 +316,8 @@ class CafeScene(Scene):
         self.entry_time = pygame.time.get_ticks()
         self.display_duration = 1000
         
-        # 1. Setup the Pot
-        self.pot = Pot(game, WIDTH // 2, HEIGHT // 2 - 10)
+        # 1. Setup the shaker
+        self.shaker = Shaker(game, WIDTH // 2, HEIGHT // 2 - 5)
         
         # 2. Setup Ingredients Group
         self.ingredients = pygame.sprite.Group()
@@ -327,7 +327,7 @@ class CafeScene(Scene):
         # A list of everything you want on the shelf right now
         # Make sure you have .png images for all of these!
         shelf_list = [
-            "Milk"
+            "Milk", "Coffee", "Thai Tea"
         ]
         
         # Grid Settings
@@ -363,14 +363,14 @@ class CafeScene(Scene):
         else: screen.fill(BG_COLOR)
         
         # Logic to detect when cooking JUST finished
-        was_cooking = self.pot.is_cooking
-        self.pot.update()
+        was_shaking = self.shaker.is_shaking
+        self.shaker.update()
         
         # 2. Draw Pot Body
-        screen.blit(self.pot.image, self.pot.rect)
+        screen.blit(self.shaker.image, self.shaker.rect)
 
         # 3. IF COOKING FINISHED: Trigger the Result Screen
-        if was_cooking and not self.pot.is_cooking:
+        if was_shaking and not self.shaker.is_shaking:
             self.trigger_result_screen()
 
         # 4. Draw Ingredients (Hidden if cooking or showing result)
@@ -381,9 +381,9 @@ class CafeScene(Scene):
                     screen.blit(item.image, item.rect)
 
         # 5. COOKING ANIMATION (Lid + Pulsing Text)
-        if self.pot.is_cooking:
-            lid_pos = self.pot.rect.x, self.pot.rect.y
-            if self.pot.lid_image: screen.blit(self.pot.lid_image, lid_pos)
+        if self.shaker.is_shaking:
+            lid_Shaker = self.shaker.rect.x, self.shaker.rect.y -75
+            if self.shaker.lid_image: screen.blit(self.shaker.lid_image, lid_Shaker)
             
             # Dark Overlay
             overlay = pygame.Surface((WIDTH, HEIGHT))
@@ -494,7 +494,7 @@ class CafeScene(Scene):
                     clicked_something = False # <--- 1. Reset this flag
                     
                     # 2. Check Ingredient Clicks
-                    if not self.pot.is_cooking:
+                    if not self.shaker.is_shaking:
                         for item in self.ingredients:
                             if item.visible and item.rect.collidepoint(self.mouse_pos):
                                 print(f"Added {item.name} to the pot!")
@@ -505,16 +505,16 @@ class CafeScene(Scene):
                     
                     # 3. Check Pot Click (ONLY if we didn't just click an ingredient)
                     if not clicked_something: # <--- This is the magic fix!
-                        if self.pot.rect.collidepoint(self.mouse_pos):
+                        if self.shaker.rect.collidepoint(self.mouse_pos):
                             has_food = any(item.is_added for item in self.ingredients)
-                            if not self.pot.is_cooking:
+                            if not self.shaker.is_shaking:
                                 if has_food:
-                                    self.pot.start_cooking()
-                                    print(f"Cooking ... {[item.name for item in self.ingredients if item.is_added]}")
+                                    self.shaker.start_shaking()
+                                    print(f"Shaking ... {[item.name for item in self.ingredients if item.is_added]}")
                                 else:
-                                    print("Pot is empty!")
+                                    print("Shaker is empty!")
                             else:
-                                print("Already cooking!")
+                                print("Already shaking!")
 
                     # 3. Check Cafe Button
                     if self.game.cafe_btn_rect.collidepoint(self.mouse_pos):
@@ -523,7 +523,7 @@ class CafeScene(Scene):
 
     def check_recipe(self):
         # 1. Collect names of ingredients added (using Title case to match your dict)
-        in_pot = frozenset([item.name.capitalize() for item in self.ingredients if item.is_added])
+        in_pot = frozenset([item.name for item in self.ingredients if item.is_added])
         # 2. Look for matches in both dictionaries
         # .get() is great because it returns None if there's no match instead of crashing
         result = FOOD_RECIPES.get(in_pot) or DRINK_RECIPES.get(in_pot)
