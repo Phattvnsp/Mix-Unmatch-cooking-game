@@ -77,7 +77,7 @@ class KitchenScene(Scene):
         # Make sure you have .png images for all of these!
         shelf_list = [
             "Egg", "Cheese", "Rice", "Fish", "Seaweed", "Tobiko",
-            "Chicken", "Pork", "Beef", "Basil"
+            "Chicken", "Pork", "Beef", "Basil", "Potato"
         ]
         
         # Grid Settings
